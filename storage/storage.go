@@ -44,6 +44,7 @@ func setTransactionLevel(tx *gorm.DB, lvl TLevel) error {
 type errorChecker func(err error) bool
 
 func onSerializationFailures(err error) bool {
+	err = errors.Cause(err)
 	if err, ok := err.(*pq.Error); ok {
 		switch err.Get('C') {
 		case "40001", "40P01":

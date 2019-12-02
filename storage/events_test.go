@@ -13,6 +13,7 @@ import (
 
 	"github.com/djumpen/test-ex-go/models"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/stretchr/testify/assert"
 
@@ -65,7 +66,7 @@ func setupPostgresContainer(ctx context.Context) (testcontainers.Container, *gor
 		port.Port(),
 	)
 	log.Println(connStr)
-	time.Sleep(5 * time.Second) // Wait for postrgres launch
+	time.Sleep(10 * time.Second) // Wait for postrgres launch
 	gormDB, err := gorm.Open("postgres", connStr)
 	if err != nil {
 		return nil, nil, err
@@ -116,13 +117,13 @@ func TestEventCreate(t *testing.T) {
 			amount := rand.Float64() * 100
 			var e models.Event
 			if i%5 == 0 {
-				e = genEvent(models.StateWin, amount)
+				e = genTestEvent(models.StateWin, amount)
 			} else {
-				e = genEvent(models.StateLoss, amount)
+				e = genTestEvent(models.StateLoss, amount)
 			}
 			err = eventsStorage.Create(ctx, e)
-			if err != nil {
-				// t.Log(err)
+			if err != nil && errors.Cause(err) != errNegativeBalance {
+				t.Error(err)
 			}
 		}(i)
 		t := time.Duration(rand.Int63n(5))
@@ -137,11 +138,11 @@ func TestEventCreate(t *testing.T) {
 	t.Logf("Total balance: %f", bal)
 
 	if bal < 0 {
-		t.Error("Negative balnce")
+		t.Error("Negative balance")
 	}
 }
 
-func genEvent(state models.EventState, amount float64) models.Event {
+func genTestEvent(state models.EventState, amount float64) models.Event {
 	u := uuid.New()
 	if state == models.StateLoss && amount > 0 {
 		amount = amount * -1

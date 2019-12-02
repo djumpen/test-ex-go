@@ -17,13 +17,3 @@ create table events
 
 create unique index events_transaction_id_uindex
 	on events (transaction_id);
-
-create table balance
-(
-	id int not null
-		constraint balance_pk
-			primary key,
-	total float not null,
-	updated_at timestamp default now() not null
-);
-

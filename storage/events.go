@@ -22,13 +22,15 @@ func NewEvents(db *gorm.DB) *events {
 	}
 }
 
+var errNegativeBalance = errors.New("Balance cannot be negative")
+
 // Create is for adding new event
 func (s *events) Create(ctx context.Context, e models.Event) error {
-	t := time.Duration(rand.Int63n(500) + 5)
+	t := time.Duration(rand.Int63n(400) + 100)
 	if err := validateEventAmount(e); err != nil {
 		return err
 	}
-	err := retryWithStrategy(onSerializationFailures, 10, t*time.Millisecond, func() error {
+	err := retryWithStrategy(onSerializationFailures, 15, t*time.Millisecond, func() error {
 		return withTransaction(s.db, func(tx *gorm.DB) error {
 			if err := setTransactionLevel(tx, TLSerializable); err != nil {
 				return errors.WithStack(err)
@@ -39,13 +41,13 @@ func (s *events) Create(ctx context.Context, e models.Event) error {
 					return errors.WithStack(err)
 				}
 				if bal+e.Amount < 0 {
-					return errors.New("Balance cannot be negative") // TODO: apperror
+					return errNegativeBalance // TODO: apperror
 				}
 			}
 			return tx.Create(&e).Error
 		})
 	})
-	return errors.WithStack(err)
+	return errors.Wrap(err, "Storage error while creating event")
 }
 
 func validateEventAmount(e models.Event) error {
