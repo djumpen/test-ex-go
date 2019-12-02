@@ -1,0 +1,14 @@
+{
+  "ReleaseMode": false,
+
+  "port": 8080,
+  "certFile": "",
+  "keyFile": "",
+  "postgres": {
+    "host": "db",
+    "username": "user",
+    "password": "password",
+    "database": "test_ex",
+    "port": 5432
+  }
+}

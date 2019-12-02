@@ -1,0 +1,22 @@
+version: '3' 
+services:
+  app:
+      image: golang:1.12
+      volumes:
+        - .:/go/src/github.com/djumpen/test-ex-go/
+      working_dir: /go/src/github.com/djumpen/test-ex-go/
+      command: ["./entrypoint.sh"]
+      ports:
+      - "8088:8080"
+      restart: always
+
+  db:
+    image: postgres:9.6
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_DB: test_ex
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
