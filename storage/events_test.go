@@ -142,6 +142,37 @@ func TestEventCreate(t *testing.T) {
 	}
 }
 
+func TestCancelLastOddEvents(t *testing.T) {
+	a := assert.New(t)
+	ctx := context.Background()
+	postgresC, db, err := setupPostgresContainer(ctx)
+	if postgresC != nil {
+		defer postgresC.Terminate(ctx)
+	}
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	eventsStorage := NewEvents(db)
+
+	assumeBalance := 520.
+
+	for i := 0; i < 40; i++ {
+		e := genTestEvent(models.StateWin, float64(i)+1)
+		err := eventsStorage.Create(ctx, e)
+		a.NoError(err)
+	}
+
+	err = eventsStorage.CancelLastOddEvents(ctx, 10)
+	a.NoError(err)
+
+	bal, err := calculateBalance(ctx, db)
+	a.NoError(err)
+
+	a.Equal(assumeBalance, bal)
+}
+
 func genTestEvent(state models.EventState, amount float64) models.Event {
 	u := uuid.New()
 	if state == models.StateLoss && amount > 0 {
