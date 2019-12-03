@@ -2,7 +2,7 @@
 
 ## About
 
-Application illustrates REST API service with concurent-ready database interactions
+Application illustrates REST API service with concurrent-ready database interactions
 
 ## Run
 
