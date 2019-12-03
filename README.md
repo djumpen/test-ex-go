@@ -19,7 +19,7 @@ Msg example:
 
 ## Testing
 
-Integration tests are done using testcontainers
+Integration tests are done using [testcontainers](https://github.com/testcontainers/testcontainers-go)
 
 `$ go test ./... -count=1`
 
