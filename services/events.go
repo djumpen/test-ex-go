@@ -37,11 +37,13 @@ func (s *events) Create(ctx context.Context, e models.Event) (err error) {
 	return err
 }
 
+var once sync.Once
+
+// TODO: add context to be able to cancel a task
 func (s *events) RunCancellationTask() {
-	var once sync.Once
 	once.Do(func() {
 		go func() {
-			for range time.Tick(time.Minute) {
+			for range time.Tick(10 * time.Minute) {
 				err := s.st.CancelLastOddEvents(context.Background(), 10)
 				if err != nil {
 					log.Print(err) // TODO: error logging
