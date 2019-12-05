@@ -39,16 +39,21 @@ func (s *events) Create(ctx context.Context, e models.Event) (err error) {
 
 var once sync.Once
 
-// TODO: add context to be able to cancel a task
-func (s *events) RunCancellationTask() {
+// RunCancellationTask run cancellation task with self-repeat
+func (s *events) RepeatCancellationTask(repeat time.Duration, number int) {
 	once.Do(func() {
 		go func() {
-			for range time.Tick(10 * time.Minute) {
-				err := s.st.CancelLastOddEvents(context.Background(), 10)
+			for range time.Tick(repeat) {
+				err := s.st.CancelLastOddEvents(context.TODO(), number)
 				if err != nil {
 					log.Print(err) // TODO: error logging
 				}
 			}
 		}()
 	})
+}
+
+func (s *events) ExecCancellation(number int) error {
+	err := s.st.CancelLastOddEvents(context.TODO(), number)
+	return errors.Wrap(err, "Events service cancellation error")
 }

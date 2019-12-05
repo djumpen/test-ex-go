@@ -13,11 +13,13 @@ var cfg *Config
 
 type (
 	Config struct {
-		ReleaseMode bool
-		Postgres    PsqlConfig `json:"postgres"`
-		Port        int        `json:"port"`
-		CertFile    string     `json:"certFile"`
-		KeyFile     string     `json:"keyFile"`
+		ReleaseMode             bool
+		Postgres                PsqlConfig `json:"postgres"`
+		Port                    int        `json:"port"`
+		CertFile                string     `json:"certFile"`
+		KeyFile                 string     `json:"keyFile"`
+		RepeatCancellationEvery int        `json:"repeatCancellationEvery"`
+		CancellationSelfRepeat  bool       `json:"cancellationSelfRepeat"`
 	}
 
 	PsqlConfig struct {

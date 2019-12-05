@@ -65,7 +65,6 @@ func setupPostgresContainer(ctx context.Context) (testcontainers.Container, *gor
 		cfg.Database,
 		port.Port(),
 	)
-	log.Println(connStr)
 	time.Sleep(10 * time.Second) // Wait for postrgres launch
 	gormDB, err := gorm.Open("postgres", connStr)
 	if err != nil {
@@ -110,20 +109,30 @@ func TestEventCreate(t *testing.T) {
 	eventsStorage := NewEvents(db)
 	var wg sync.WaitGroup
 
-	for i := 0; i < 1000; i++ {
+	assumeTotal := 0.
+	var tl sync.Mutex
+
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
 		go func(i int) {
-			wg.Add(1)
 			defer wg.Done()
-			amount := rand.Float64() * 100
+			amount := float64(rand.Intn(100))
 			var e models.Event
-			if i%5 == 0 {
-				e = genTestEvent(models.StateWin, amount)
-			} else {
-				e = genTestEvent(models.StateLoss, amount)
+			if i%5 == 0 { // StateWin
+				e = genTestEvent(amount)
+			} else { // StateLoss
+				amount = amount * -1
+				e = genTestEvent(amount)
 			}
 			err = eventsStorage.Create(ctx, e)
 			if err != nil && errors.Cause(err) != errNegativeBalance {
 				t.Error(err)
+				return
+			}
+			if err == nil {
+				tl.Lock()
+				assumeTotal += e.Amount
+				tl.Unlock()
 			}
 		}(i)
 		t := time.Duration(rand.Int63n(5))
@@ -132,10 +141,12 @@ func TestEventCreate(t *testing.T) {
 
 	wg.Wait()
 
-	bal, err := calculateBalance(ctx, db)
+	bal, err := getBalanceWithLock(ctx, db)
 	a.NoError(err)
 
 	t.Logf("Total balance: %f", bal)
+
+	a.Equal(assumeTotal, bal)
 
 	if bal < 0 {
 		t.Error("Negative balance")
@@ -159,7 +170,7 @@ func TestCancelLastOddEvents(t *testing.T) {
 	assumeBalance := 520.
 
 	for i := 0; i < 40; i++ {
-		e := genTestEvent(models.StateWin, float64(i)+1)
+		e := genTestEvent(float64(i) + 1)
 		err := eventsStorage.Create(ctx, e)
 		a.NoError(err)
 	}
@@ -167,16 +178,19 @@ func TestCancelLastOddEvents(t *testing.T) {
 	err = eventsStorage.CancelLastOddEvents(ctx, 10)
 	a.NoError(err)
 
-	bal, err := calculateBalance(ctx, db)
+	bal, err := getBalanceWithLock(ctx, db)
 	a.NoError(err)
 
 	a.Equal(assumeBalance, bal)
 }
 
-func genTestEvent(state models.EventState, amount float64) models.Event {
+func genTestEvent(amount float64) models.Event {
 	u := uuid.New()
-	if state == models.StateLoss && amount > 0 {
-		amount = amount * -1
+	var state models.EventState
+	if amount > 0 {
+		state = models.StateWin
+	} else {
+		state = models.StateLoss
 	}
 	return models.Event{
 		State:         state,

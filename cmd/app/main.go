@@ -65,9 +65,6 @@ func main() {
 	r.GET("/health", commonRes.Health)
 	r.NoRoute(commonRes.NotFound)
 
-	// Run cancellation task
-	eventsSvc.RunCancellationTask()
-
 	useSSL := cfg.CertFile != "" && cfg.KeyFile != ""
 	address := fmt.Sprintf(":%d", cfg.Port)
 

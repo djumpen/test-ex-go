@@ -10,5 +10,7 @@
     "password": "password",
     "database": "test_ex",
     "port": 5432
-  }
+  },
+  "repeatCancellationEvery": 10,
+  "cancellationSelfRepeat": true 
 }

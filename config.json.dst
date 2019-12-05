@@ -11,4 +11,6 @@
     "database": "",
     "port": 5432
   },
+  "repeatCancellationEvery": 10,
+  "cancellationSelfRepeat": true 
 }
