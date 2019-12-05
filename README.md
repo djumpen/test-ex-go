@@ -1,7 +1,5 @@
 # Golang/Postgres Test Exercise
 
-## About
-
 Application illustrates REST API service with concurrent-ready database interactions
 
 ## Run
