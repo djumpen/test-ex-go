@@ -17,7 +17,7 @@ Msg example:
 
 ## Tasks
 
-To be able to scale our app I moved cancellation task to it's own runner. Repeats can be managed either by our app or by CronJob (depends on config)
+To be able to scale our app we execute cancellation task with it's own runner. Repeats can be managed either by our app or by CronJob (depends on config). We assume this particular service will not be scaled in current implementation.
 
 `$ go run cmd/task/cancellation.go`
 
